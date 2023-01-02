@@ -16,7 +16,7 @@ app.set('views', './views/pug')
 app.route('/').get((req, res) => {
   // Renders a view and sends the rendered HTML string to the client. Optional parameters:
   // send the rendered view to the client
-  res.render('index')
+  res.render('index', {title: 'Hello', message: 'Please log in'})
 });
 
 const PORT = process.env.PORT || 3000;
