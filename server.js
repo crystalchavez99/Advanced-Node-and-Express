@@ -67,7 +67,7 @@ myDB(async client => {
   })
 
   app.route('/profile').get(ensureAuthenticated,(req,res)=>{
-    res.render('profile')
+    res.render('profile', {user: req.user.username})
   })
 
 // persist user data (after successful authentication) into session.
