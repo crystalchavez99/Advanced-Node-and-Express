@@ -50,9 +50,18 @@ myDB(async client => {
   app.route('/').get((req, res) => {
     res.render('index', {
       title: 'Connected to Database',
-      message: 'Please log in'
+      message: 'Please log in',
+      showLogin: true
     });
   });
+
+  app.route('/login').post(passport.authenticate('local',{ failureRedirect: '/' }),(req,res)=>{
+    res.redirect('/profile')
+  })
+
+  app.route('/profile').get((req,res)=>{
+    res.render('profile')
+  })
 
 // persist user data (after successful authentication) into session.
   passport.serializeUser((user, done) => {
@@ -84,7 +93,7 @@ myDB(async client => {
 
     // Renders a view and sends the rendered HTML string to the client. Optional parameters:
   // send the rendered view to the client
-    res.render('index', { title: e, message: 'Unable to connect to database' });
+    res.render('index', { title: e, message: 'Unable to connect to database'});
   });
 });
 
