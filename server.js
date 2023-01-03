@@ -37,7 +37,14 @@ app.use('/public', express.static(process.cwd() + '/public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
+// will check if a user is authenticated
+function ensureAuthenticated(req,res,next){
+  // calling Passport's isAuthenticated method on the request which checks if req.user is defined.
+  if(req.isAuthenticated()){
+    return next();
+  }
+  res.redirect('/')
+}
 /*
 Connect to the database once, when you start the server, and keep a
 persistent connection for the full life-cycle of the app.
@@ -59,7 +66,7 @@ myDB(async client => {
     res.redirect('/profile')
   })
 
-  app.route('/profile').get((req,res)=>{
+  app.route('/profile').get(ensureAuthenticated,(req,res)=>{
     res.render('profile')
   })
 
