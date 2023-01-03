@@ -11,11 +11,13 @@ const { ObjectID } = require('mongodb');
 
 const app = express();
 
-fccTesting(app); //For FCC testing purposes
-app.use('/public', express.static(process.cwd() + '/public'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Assigns setting name to value.
+app.set('view engine', 'pug');
+app.set('views', './views/pug')
 
+/*
+https://stackoverflow.com/questions/27637609/understanding-passport-serialize-deserialize
+*/
 // This is used to compute the hash used to encrypt your cookie!
 // Applications must initialize session support in order to make use of login sessions.
 app.use(session({
@@ -25,28 +27,51 @@ app.use(session({
   cookie: { secure: false }
 }));
 
+
 app.use(passport.initialize());
 app.use(passport.session());
 
-// persist user data (after successful authentication) into session.
-passport.serializeUser((user,done)=>{
-  done(null,user._id)
-})
+fccTesting(app); //For FCC testing purposes
+app.use('/public', express.static(process.cwd() + '/public'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+
+/*
+Connect to the database once, when you start the server, and keep a
+persistent connection for the full life-cycle of the app.
+The purpose of this is to not allow requests before your database
+is connected or if there is a database error
+*/
+myDB(async client => {
+  const myDataBase = await client.db('database').collection('users');
+
+  app.route('/').get((req, res) => {
+    res.render('index', {
+      title: 'Connected to Database',
+      message: 'Please log in'
+    });
+  });
+// persist user data (after successful authentication) into session.
+
+  passport.serializeUser((user, done) => {
+    done(null, user._id);
+  });
 // is used to retrieve user data from session.
-passport.deserializeUser((id,done)=>{
-  myDB.findOne({_id: new ObjectID(id)}, (err, doc)=>{
-    done(null,null)
-  })
-})
-// Assigns setting name to value.
-app.set('view engine', 'pug');
-app.set('views', './views/pug')
-app.route('/').get((req, res) => {
-  // Renders a view and sends the rendered HTML string to the client. Optional parameters:
+  passport.deserializeUser((id, done) => {
+    myDataBase.findOne({ _id: new ObjectID(id) }, (err, doc) => {
+      done(null, doc);
+    });
+  });
+
+}).catch(e => {
+  app.route('/').get((req, res) => {
+    // Renders a view and sends the rendered HTML string to the client. Optional parameters:
   // send the rendered view to the client
-  res.render('index', {title: 'Hello', message: 'Please log in'})
+    res.render('index', { title: e, message: 'Unable to connect to database' });
+  });
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
