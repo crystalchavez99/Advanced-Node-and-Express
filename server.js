@@ -6,6 +6,8 @@ const passport = require('passport');
 const  session  = require('express-session');
 const myDB = require('./connection');
 const fccTesting = require('./freeCodeCamp/fcctesting.js');
+const { ObjectID } = require('mongodb');
+
 
 const app = express();
 
@@ -15,6 +17,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // This is used to compute the hash used to encrypt your cookie!
+// Applications must initialize session support in order to make use of login sessions.
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: true,
@@ -25,6 +28,17 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+// persist user data (after successful authentication) into session.
+passport.serializeUser((user,done)=>{
+  done(null,user._id)
+})
+
+// is used to retrieve user data from session.
+passport.deserializeUser((id,done)=>{
+  myDB.findOne({_id: new ObjectID(id)}, (err, doc)=>{
+    done(null,null)
+  })
+})
 // Assigns setting name to value.
 app.set('view engine', 'pug');
 app.set('views', './views/pug')
