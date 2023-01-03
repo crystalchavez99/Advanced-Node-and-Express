@@ -7,6 +7,7 @@ const  session  = require('express-session');
 const myDB = require('./connection');
 const fccTesting = require('./freeCodeCamp/fcctesting.js');
 const { ObjectID } = require('mongodb');
+const LocalStrategy = require('passport-local');
 
 
 const app = express();
@@ -52,11 +53,12 @@ myDB(async client => {
       message: 'Please log in'
     });
   });
-// persist user data (after successful authentication) into session.
 
+// persist user data (after successful authentication) into session.
   passport.serializeUser((user, done) => {
     done(null, user._id);
   });
+
 // is used to retrieve user data from session.
   passport.deserializeUser((id, done) => {
     myDataBase.findOne({ _id: new ObjectID(id) }, (err, doc) => {
@@ -64,13 +66,28 @@ myDB(async client => {
     });
   });
 
+  // This is defining the process to use when you try to authenticate someone locally
+  passport.use(new LocalStrategy((username, password, done) => {
+    // tries to find a user in your database with the username entered
+    myDataBase.findOne({ username: username }, (err, user) => {
+      console.log(`User ${username} attempted to log in.`);
+      if (err) return done(err);
+      if (!user) return done(null, false);
+      //it checks for the password to match.
+      if (password !== user.password) return done(null, false);
+      // the user object is returned and they are authenticated.
+      return done(null, user);
+    });
+  }));
 }).catch(e => {
   app.route('/').get((req, res) => {
+
     // Renders a view and sends the rendered HTML string to the client. Optional parameters:
   // send the rendered view to the client
     res.render('index', { title: e, message: 'Unable to connect to database' });
   });
 });
+
 
 
 const PORT = process.env.PORT || 3000;
