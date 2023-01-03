@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 // authentication middleware for Node.js
 const passport = require('passport');
-const  session  = require('express-session');
+const session = require('express-session');
 const myDB = require('./connection');
 const fccTesting = require('./freeCodeCamp/fcctesting.js');
 const { ObjectID } = require('mongodb');
@@ -38,9 +38,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // will check if a user is authenticated
-function ensureAuthenticated(req,res,next){
+function ensureAuthenticated(req, res, next) {
   // calling Passport's isAuthenticated method on the request which checks if req.user is defined.
-  if(req.isAuthenticated()){
+  if (req.isAuthenticated()) {
     return next();
   }
   res.redirect('/')
@@ -58,35 +58,70 @@ myDB(async client => {
     res.render('index', {
       title: 'Connected to Database',
       message: 'Please log in',
-      showLogin: true
+      showLogin: true,
+      showRegistration: true
     });
   });
 
-  app.route('/login').post(passport.authenticate('local',{ failureRedirect: '/' }),(req,res)=>{
+  app.route('/login').post(passport.authenticate('local', { failureRedirect: '/' }), (req, res) => {
     res.redirect('/profile')
   })
 
-  app.route('/profile').get(ensureAuthenticated,(req,res)=>{
-    res.render('profile', {user: req.user.username})
+  app.route('/profile').get(ensureAuthenticated, (req, res) => {
+    res.render('profile', { user: req.user.username })
   })
 
-  app.route('/logout').get((res,res)=>{
+  app.route('/logout').get((req, res) => {
     req.logout();
     res.redirect('/');
   })
 
-  app.use((req,res,next)=>{
+  app.route('/register').post((req, res, next) => {
+    // Query database with findOne
+    myDataBase.findOne({ username: req.body.username }, (err, user) => {
+      // If there is an error, call next with the error
+      if (err) {
+        next(err)
+        //If a user is returned, redirect back to home
+      } else if (user) {
+        res.redirect('/')
+      } else {
+        // if a user is not found and no errors occur,
+        //then insertOne into the database with the username and password.
+        myDataBase.insertOne({
+          username: req.body.username,
+          password: req.body.password
+        }, (err, doc) => {
+          if (err) {
+            res.redirect('/')
+          } else {
+            // The inserted document is held within
+            // the ops property of the doc
+            // call next to go to step 2, authenticating the new user
+            next(null, doc.ops[0])
+          }
+        })
+      }
+    })
+  },
+    passport.authenticate('local', { failureRedirect: '/' }),
+    (req, res, next) => {
+      res.redirect('/profile');
+    }
+  )
+
+  app.use((req, res, next) => {
     res.status(404)
-    .type('text')
-    .send('NOT FOUND')
+      .type('text')
+      .send('NOT FOUND')
   })
 
-// persist user data (after successful authentication) into session.
+  // persist user data (after successful authentication) into session.
   passport.serializeUser((user, done) => {
     done(null, user._id);
   });
 
-// is used to retrieve user data from session.
+  // is used to retrieve user data from session.
   passport.deserializeUser((id, done) => {
     myDataBase.findOne({ _id: new ObjectID(id) }, (err, doc) => {
       done(null, doc);
@@ -110,8 +145,8 @@ myDB(async client => {
   app.route('/').get((req, res) => {
 
     // Renders a view and sends the rendered HTML string to the client. Optional parameters:
-  // send the rendered view to the client
-    res.render('index', { title: e, message: 'Unable to connect to database'});
+    // send the rendered view to the client
+    res.render('index', { title: e, message: 'Unable to connect to database' });
   });
 });
 
