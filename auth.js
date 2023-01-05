@@ -7,13 +7,14 @@ module.exports = function (app, myDataBase) {
 // persist user data (after successful authentication) into session.
 passport.serializeUser((user, done) => {
     done(null, user._id);
-  });
+});
 
   // is used to retrieve user data from session.
   passport.deserializeUser((id, done) => {
-    myDataBase.findOne({ _id: new ObjectID(id) }, (err, doc) => {
-      done(null, doc);
-    });
+      myDataBase.findOne({ _id: new ObjectID(id) }, (err, doc) => {
+          if (err) return console.error(err);
+          done(null, doc);
+      });
   });
 
   // This is defining the process to use when you try to authenticate someone locally

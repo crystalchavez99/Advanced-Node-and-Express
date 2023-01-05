@@ -1,7 +1,14 @@
 const bcrypt = require('bcrypt');
 // authentication middleware for Node.js
 const passport = require('passport');
-
+// will check if a user is authenticated
+function ensureAuthenticated(req, res, next) {
+    // calling Passport's isAuthenticated method on the request which checks if req.user is defined.
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    res.redirect('/')
+}
 module.exports = function (app, myDataBase) {
     app.route('/').get((req, res) => {
         res.render('index', {
@@ -65,12 +72,4 @@ module.exports = function (app, myDataBase) {
             .type('text')
             .send('NOT FOUND')
     })
-}
-// will check if a user is authenticated
-function ensureAuthenticated(req, res, next) {
-    // calling Passport's isAuthenticated method on the request which checks if req.user is defined.
-    if (req.isAuthenticated()) {
-        return next();
-    }
-    res.redirect('/')
 }
