@@ -2,6 +2,9 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const bcrypt = require('bcrypt');
 const { ObjectID } = require('mongodb');
+// create github strategy
+//authenticates users using a GitHub account and OAuth 2.0 tokens.
+const GitHubStrategy = require('passport-github').Strategy;
 
 module.exports = function (app, myDataBase) {
 // persist user data (after successful authentication) into session.
@@ -32,4 +35,20 @@ passport.serializeUser((user, done) => {
       return done(null, user);
     });
   }));
+
+  //  The client ID and secret obtained when creating an application are
+  //supplied as options when creating the strategy.
+  passport.use(new GitHubStrategy({
+    clientID: process.env.GITHUB_CLIENT_ID,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    callbackURL: 'https://freecodecamp-chat-app.onrender.com'
+  },
+  // verify callback, which receives the access token and optional refresh token
+  // profile which contains the authenticated user's GitHub profile
+  // callback must call cb providing a user to complete authentication.
+  function (accessToken, refreshToken, profile, cb) {
+    console.log(profile);
+    //Database logic here with callback containing our user object
+  }
+));
 }
