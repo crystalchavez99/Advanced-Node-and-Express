@@ -8,6 +8,7 @@ const myDB = require('./connection');
 const fccTesting = require('./freeCodeCamp/fcctesting.js');
 const { ObjectID } = require('mongodb');
 const LocalStrategy = require('passport-local');
+const bcrypt  = require('bcrypt');
 
 
 const app = express();
@@ -78,6 +79,8 @@ myDB(async client => {
 
   app.route('/register').post((req, res, next) => {
     // Query database with findOne
+    // Hash the passwords
+    const hash = bcrypt.hashSync(req.body.password, 12);
     myDataBase.findOne({ username: req.body.username }, (err, user) => {
       // If there is an error, call next with the error
       if (err) {
@@ -90,7 +93,7 @@ myDB(async client => {
         //then insertOne into the database with the username and password.
         myDataBase.insertOne({
           username: req.body.username,
-          password: req.body.password
+          password: hash
         }, (err, doc) => {
           if (err) {
             res.redirect('/')
@@ -136,7 +139,9 @@ myDB(async client => {
       if (err) return done(err);
       if (!user) return done(null, false);
       //it checks for the password to match.
-      if (password !== user.password) return done(null, false);
+      if (!bcrypt.compareSync(password, user.password)) {
+        return done(null, false);
+    }
       // the user object is returned and they are authenticated.
       return done(null, user);
     });
