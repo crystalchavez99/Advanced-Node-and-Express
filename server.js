@@ -58,8 +58,16 @@ myDB(async client => {
   const myDataBase = await client.db('database').collection('users');
   routes(app, myDataBase);
   auth(app, myDataBase);
+  //keep track of the users,
+  //just before where you are currently listening for connections.
+  let currentUsers = 0;
   io.on('connection', socket => {
+    // when someone connects, you should increment the count before emitting the count
+    ++currentUsers;
+    //you should emit the event (still within the connection listener)
+    io.emit('user count', currentUsers);
     console.log('A user has connected');
+
   });
 }).catch(e => {
   app.route('/').get((req, res) => {
