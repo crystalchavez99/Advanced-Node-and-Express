@@ -41,7 +41,7 @@ passport.serializeUser((user, done) => {
   passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: 'https://freecodecamp-chat-app.onrender.com'
+    callbackURL: 'https://freecodecamp-chat-app.onrender.com/auth/github/callback'
   },
   // verify callback, which receives the access token and optional refresh token
   // profile which contains the authenticated user's GitHub profile
@@ -49,6 +49,38 @@ passport.serializeUser((user, done) => {
   function (accessToken, refreshToken, profile, cb) {
     console.log(profile);
     //Database logic here with callback containing our user object
+    //  allows you to search for an object and update it.
+    /*
+    We need to load the user's database object if it exists,
+     or create one if it doesn't, and populate the fields from the profile,
+     then return the user's object.
+    */
+    myDataBase.findOneAndUpdate(
+      { id: profile.id },
+      {
+        $setOnInsert: {
+          id: profile.id,
+          username: profile.username,
+          name: profile.displayName || 'John Doe',
+          photo: profile.photos[0].value || '',
+          email: Array.isArray(profile.emails)
+            ? profile.emails[0].value
+            : 'No public email',
+          created_on: new Date(),
+          provider: profile.provider || ''
+        },
+        $set: {
+          last_login: new Date()
+        },
+        $inc: {
+          login_count: 1
+        }
+      },
+      { upsert: true, new: true },
+      (err, doc) => {
+        return cb(null, doc.value);
+      }
+    );
   }
 ));
 }
