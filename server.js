@@ -11,7 +11,9 @@ const LocalStrategy = require('passport-local');
 const bcrypt = require('bcrypt');
 const routes = require('./routes.js');
 const auth = require('./auth.js')
-
+// create github strategy
+//authenticates users using a GitHub account and OAuth 2.0 tokens.
+const GitHubStrategy = require('passport-github').Strategy;
 
 
 
@@ -55,7 +57,10 @@ is connected or if there is a database error
 myDB(async client => {
   const myDataBase = await client.db('database').collection('users');
   routes(app, myDataBase);
-  auth(app, myDataBase)
+  auth(app, myDataBase);
+  io.on('connection', socket => {
+    console.log('A user has connected');
+  });
 }).catch(e => {
   app.route('/').get((req, res) => {
     // Renders a view and sends the rendered HTML string to the client. Optional parameters:
@@ -67,6 +72,6 @@ myDB(async client => {
 
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+http.listen(PORT, () => {
   console.log('Listening on port ' + PORT);
 });

@@ -1,6 +1,9 @@
 const bcrypt = require('bcrypt');
 // authentication middleware for Node.js
 const passport = require('passport');
+// create github strategy
+//authenticates users using a GitHub account and OAuth 2.0 tokens.
+const GitHubStrategy = require('passport-github').Strategy;
 
 module.exports = function (app, myDataBase) {
 
