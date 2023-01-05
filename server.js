@@ -20,6 +20,10 @@ const GitHubStrategy = require('passport-github').Strategy;
 
 const app = express();
 
+// http server is mounted on the express app
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
+
 // Assigns setting name to value.
 app.set('view engine', 'pug');
 app.set('views', './views/pug')
@@ -44,9 +48,7 @@ fccTesting(app); //For FCC testing purposes
 app.use('/public', express.static(process.cwd() + '/public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// http server is mounted on the express app
-const http = require('http').createServer(app);
-const io = require('socket.io')(http);
+
 
 /*
 Connect to the database once, when you start the server, and keep a
