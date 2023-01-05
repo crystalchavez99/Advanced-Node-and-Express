@@ -1,7 +1,9 @@
+require(dotenv).config()
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const bcrypt = require('bcrypt');
 const { ObjectID } = require('mongodb');
+
 // create github strategy
 //authenticates users using a GitHub account and OAuth 2.0 tokens.
 const GitHubStrategy = require('passport-github').Strategy;

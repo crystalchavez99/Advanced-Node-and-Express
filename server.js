@@ -12,6 +12,11 @@ const bcrypt = require('bcrypt');
 const routes = require('./routes.js');
 const auth = require('./auth.js')
 
+// http server is mounted on the express app
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
+
+
 
 const app = express();
 
